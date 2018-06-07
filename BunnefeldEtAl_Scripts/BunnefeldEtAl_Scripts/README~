@@ -1,0 +1,44 @@
+#Brief analysis pipeline - each script/notebook has more annotation. File paths may not be correct, amend to where you have saved the folder. 
+
+If anything is unclear or files are missing, please contact lynsey.bunnefeld@stir.ac.uk.
+
+1_FileS1 is replicated from LohseEtAl2016 and has a suite of modules needed in downstream analyses. 
+
+Generating functions for specified models are generated in 2_GeneratingFunctions.nb. 
+
+Species' variants were all processed according to 'VariantProcessingExample.txt' - associated python scripts in included folder. 
+
+Output of variant processing is file of mutation counts per triple for 14 triples per individual. These are large files (not included, but can be provided).
+
+These 'triple' files are input into Mathematica (3_ConfigGeneration.nb) for conversion into counts of mutational configurations averaged over the two triples from the same sampling location (e.g., Spanish1,Spanish2,Hungarian1 and Spanish1,Spanish2,Hungarian2). Output configuration files included in folder (SpeciesMutationalConfigs).
+
+Full models are fit to each species' mutational configurations. Best-supported models are then calibrated and used to generate 100 parametric bootstrap replicates using msprime. (4_ModelFitting_Calibration.nb).
+
+Each bootstrap replicate for each species is the same size (block and base number) as the observed data for the focal species. These are processed using a shell script and Mathematica online to produce counts of mutational configurations in the same format as the real data (this is computationally intensive, therefore only the outputs are provided in folder 'SimConfigs'.
+
+Simplified models and 95%CIs generated from fitting models to the bootstrap replicates are used to identify the simplest model for each species (4_ModelFitting_Calibration.nb).
+
+These models are used to identify a) species that may potentially have co-diverged (tested using cluster tests) and b) the best-fit community-wide distribution of divergence and admixture times (5_ComparativeAnalyses.nb).
+
+
+NB. The 16 full models have a distinct order (see 4_ModelFitting_Calibration) and are sometimes referred to by their number. These correspond to specific combinations of ancestral Nes shared with current populations and admixture directions, namely (for an OofE topology)
+		
+1	C	C	E	C
+2	C	C	C	E
+3	C	C	E	W
+4	C	C	W	E
+5	C	E	E	C
+6	C	E	C	E
+7	C	E	E	W
+8	C	E	W	E
+9	W	E	E	C
+10	W	E	C	E
+11	W	E	E	W
+12	W	E	W	E
+13	W	W	E	C
+14	W	W	C	E
+15	W	W	E	W
+16	W	W	W	E
+
+
+

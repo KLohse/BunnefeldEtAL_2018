@@ -1,0 +1,32 @@
+#VCF to triple pipeline for one species (Eurytoma brunniventris)
+#Individual IDs as in table S2
+#The input files are large, but can be provided if required.
+
+#Each species follows the same procedure, with some amendments for species with only five individuals (Biorhiza pallida, Ormryus pomaceus) or with variable quality data per individual (Pseudoneuroterus saliens)
+
+#Remove masked sites
+./../../SpeciesVariants/general.allmasked2.sh Ebru 719.freebayes 1132.freebayes 1927.freebayes 989.freebayes 664.freebayes 2453.freebayes Ebru.scaffolds.fasta
+
+#Select focal six individuals where sites are callable in each individual
+./../../SpeciesVariants/SelectSextupletsMD1maskedSpr17freebayes.sh Ebru 719.freebayes 1132.freebayes 1927.freebayes 989.freebayes 664.freebayes 2453.freebayes Ebru.scaffolds.fasta
+
+#Tidying up file names
+cp Ebru719.freebayes.Ebru1132.freebayes.Ebru1927.freebayes.Ebru989.freebayes.Ebru664.freebayes.Ebru2453.freebayes.CallableLoci.mbq10mmq20md1.masked.CALLABLE.bed2 Ebru.freebayes.CallableLoci.mbq10mmq20md1.masked.CALLABLE.bed2
+cp Ebru719.freebayes.Ebru1132.freebayes.Ebru1927.freebayes.Ebru989.freebayes.Ebru664.freebayes.Ebru2453.freebayes.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf.gz Ebru.freebayes.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.vcf.gz
+cp Ebru719.freebayes.Ebru1132.freebayes.Ebru1927.freebayes.Ebru989.freebayes.Ebru664.freebayes.Ebru2453.freebayes.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf.gz.tbi Ebru.freebayes.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.vcf.gz.tbi
+
+#Tabix vcf file to identify all contigs in file
+tabix -p vcf Ebru.freebayes.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.vcf.gz -l > loci.txt
+
+#Cut blocks of a certain size out of the vcf using the bed file with callable loci as a guide
+python ./../../SpeciesVariants/block_cutter_vcf_LBv2Spr17.py Ebru.freebayes.CallableLoci.mbq10mmq20md1.masked.CALLABLE.bed2 Ebru.freebayes.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.vcf.gz loci.txt 178 Ebru719.Ebru1132.Ebru1927.Ebru989.Ebru664.Ebru2453 Ebru > Ebru178_Summaryv2freebayes.txt &
+
+#Tidy up file names
+cp Ebru719.Ebru1132.Ebru1927.Ebru989.Ebru664.Ebru2453.178.2.npy Ebru719.Ebru1132.Ebru1927.Ebru989.Ebru664.Ebru2453.freebayes.178.2.npy 
+rm Ebru719.Ebru1132.Ebru1927.Ebru989.Ebru664.Ebru2453.178.2.npy 
+
+#Using cut blocks, generate mutation counts per triple (for 14 triples) and export as text file for further processing in Mathematica
+python ./../../SpeciesVariants/triple_generator.py Ebru719.Ebru1132.Ebru1927.Ebru989.Ebru664.Ebru2453.freebayes.178.2.npy > EbruTriples2Spr17.freebayes.txt &
+
+#This script calculates average pi for every pairwise comparison (given blocks of a certain size)
+./../../SpeciesVariants/pairPiBlock.py Ebru719.Ebru1132.Ebru1927.Ebru989.Ebru664.Ebru2453.freebayes.178.2.npy 178 012345

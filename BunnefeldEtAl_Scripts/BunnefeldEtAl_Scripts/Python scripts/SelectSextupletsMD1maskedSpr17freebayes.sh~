@@ -1,0 +1,38 @@
+#Selection script ready for Spring 2017 rerun (hardcoded for 6 individuals)
+#Produces bed2 file and vcf files (variants, indels, snps - may need to amend if only snps available)
+
+#this script takes as input bed files per individual and filtered vcfs (variants, snps, indels)
+#it is VERY hardcoded for six individuals, but should be easy to fix for different syntax and/or numbers of individuals 
+#i found it easiest just to play with individual sections until you get a hang out of what all the steps do
+#beware that the bed file processing accesses different columns of the bed file by numeric index, so you have to watch out that the right column is getting selected (could depend on if it is possible to output different kinds of beds? not really sure!!) will depend on the number of individuals you are merging together though for sure...?!
+
+##Create subsampled variant files across SIX individuals. cmd: "./SelectSextupletsMD1masked.sh Cfun 135 139 83 71 86B 3549B Cfun.scaffolds.fasta"
+#here you create a file with contig name and the x:y positions that overlap across each individual's bed files (e.g. sites 1-10 and 21-25 are callable across all individuals)
+~/../software/bedtools2-master/bin/multiIntersectBed -i <(grep -E 'CALLABLE|LOW_COVERAGE' $1$2.CallableLoci.mbq10mmq20md2.masked.bed) <(grep -E 'CALLABLE|LOW_COVERAGE' $1$3.CallableLoci.mbq10mmq20md2.masked.bed) <(grep -E 'CALLABLE|LOW_COVERAGE' $1$4.CallableLoci.mbq10mmq20md2.masked.bed) <(grep -E 'CALLABLE|LOW_COVERAGE' $1$5.CallableLoci.mbq10mmq20md2.masked.bed) <(grep -E 'CALLABLE|LOW_COVERAGE' $1$6.CallableLoci.mbq10mmq20md2.masked.bed) <(grep -E 'CALLABLE|LOW_COVERAGE' $1$7.CallableLoci.mbq10mmq20md2.masked.bed)| grep "1,2,3,4,5,6" | awk '{print $0,$3 - $2}'| sed 's/ /\t/g' | cut -f1-3,12 > $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.CallableLoci.mbq10mmq20md1.masked.CALLABLE.bed2
+
+#here you are using the filtered bed to filter the vcf (all variants)
+#bcftools view -R $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.CallableLoci.mbq10mmq20md1.masked.CALLABLE.bed $1.calibrated_haploid.filtered_variants.vcf.gz > $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf
+#then you sort it
+#~/../software/vcftools_0.1.12b/bin/vcf-sort -c $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf > $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf.tmp
+#mv $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf.tmp $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf
+#rm $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf.gz
+
+#same again but just snps
+bcftools view -R $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.CallableLoci.mbq10mmq20md1.masked.CALLABLE.bed2 $1.freebayes.C1.b10.m20.decompose.snps.Q20.vcf.gz > $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf
+~/../software/vcftools_0.1.12b/bin/vcf-sort -c $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf > $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf.tmp
+mv $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf.tmp $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf
+#rm $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.vcf.gz
+
+#same again but just indels
+#bcftools view -R $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.CallableLoci.mbq10mmq20md1.masked.CALLABLE.bed $1.calibrated_haploid.filtered_indels.vcf.gz > $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf
+#~/../software/vcftools_0.1.12b/bin/vcf-sort -c $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf > $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf.tmp
+#mv $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf.tmp $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf
+#rm $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf.gz
+
+#zipping and tabixing the vcf files....
+#bgzip $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf
+#tabix -p vcf $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_variants.CallableLoci.md1.masked.vcf.gz
+bgzip $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf
+tabix -p vcf $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_snps.CallableLoci.md1.masked.freebayes.vcf.gz
+#bgzip $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf
+#tabix -p vcf $1$2.$1$3.$1$4.$1$5.$1$6.$1$7.calibrated_haploid.filtered_indels.CallableLoci.md1.masked.vcf.gz
